@@ -1,10 +1,10 @@
 name: Build ZackStore APK
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,15 +18,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
-
-      - name: Install dependencies
-        run: npm install
+          java-version: '21'
 
       - name: Add Android platform
         run: npx cap add android
@@ -35,8 +36,8 @@ jobs:
         run: npx cap sync android
 
       - name: Build APK
+        working-directory: android
         run: |
-          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -45,3 +46,4 @@ jobs:
         with:
           name: ZackStore-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
