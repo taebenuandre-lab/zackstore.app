@@ -4,8 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.zackstore.app',
   appName: 'ZackStore',
   webDir: 'www',
-  android: {
-    backgroundColor: '#05060b'
+  bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https'
   }
 };
 

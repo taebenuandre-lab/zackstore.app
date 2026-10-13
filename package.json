@@ -2,9 +2,9 @@
   "name": "zackstore-mobile",
   "version": "1.0.0",
   "private": true,
-  "description": "ZackStore Android app - Capacitor cloud build",
+  "description": "ZackStore Android app",
   "scripts": {
-    "sync": "npx cap sync android",
+    "sync": "npx cap sync",
     "build:apk": "npx cap build android --androidreleasetype APK",
     "generate:icons": "npx capacitor-assets generate --android"
   },

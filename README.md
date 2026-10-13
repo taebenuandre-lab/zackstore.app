@@ -1,25 +1,17 @@
-# ZackStore — Build APK dari HP
+# ZackStore Production Package
 
-Project ini sudah disiapkan untuk dibuild memakai GitHub Actions, jadi tidak perlu PC/laptop untuk proses compile Android.
+Isi utama:
+- `www/index.html` — frontend ZackStore
+- `supabase/zackstore_supabase_migration.sql` — migration backend final
+- `resources/icon.png` — icon Android 1254x1254 PNG
+- `package.json` + `capacitor.config.ts` — Capacitor Android
+- `.github/workflows/build-apk.yml` — build APK otomatis di GitHub Actions
 
-## Isi
-- `www/index.html` — ZackStore UI + koneksi Supabase yang sudah dikonfigurasi.
-- `package.json` — Capacitor 8.
-- `capacitor.config.ts` — app id `com.zackstore.app`.
-- `.github/workflows/build-apk.yml` — otomatis membuat APK debug di cloud.
-- `supabase/zackstore_supabase_migration.sql` — migration tambahan Storage/paket.
+## Urutan final
+1. Pastikan Supabase project memakai URL dan publishable key yang benar di frontend.
+2. Jalankan `supabase/zackstore_supabase_migration.sql` sekali di Supabase SQL Editor setelah fitur dianggap final.
+3. Push isi folder ini ke repository GitHub.
+4. Jalankan Actions `Build ZackStore APK`.
+5. Ambil artifact `ZackStore-APK`.
 
-## Build dari HP lewat GitHub
-1. Buat repository baru di GitHub, misalnya `zackstore-app`.
-2. Upload SEMUA isi folder project ini ke root repository (bukan folder pembungkus `ZackStore-CloudBuild`). Pastikan `package.json`, `capacitor.config.ts`, `www`, dan `.github` berada di root.
-3. Buka tab **Actions** pada repository.
-4. Pilih workflow **Build ZackStore APK**.
-5. Tekan **Run workflow**. Workflow juga otomatis jalan setelah push ke branch `main`.
-6. Tunggu sampai job selesai.
-7. Buka hasil workflow → bagian **Artifacts** → download `ZackStore-debug-apk`.
-8. Extract artifact ZIP lalu install `app-debug.apk` di Android.
-
-## Catatan keamanan
-- Publishable key Supabase boleh berada di frontend/APK.
-- Jangan pernah memasukkan `service_role` atau secret key ke frontend/APK.
-- Debug APK cocok untuk testing. Untuk rilis Play Store, perlu signing/release build.
+Jangan masukkan Supabase service-role key ke frontend atau repository.
