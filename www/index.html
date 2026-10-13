@@ -432,7 +432,7 @@ body.splash-lock{
   <div class="card cardPad section"><div class="sectionHead"><div><h3>Ticket Support</h3><span class="muted">Butuh bantuan? Buat tiket dan chat dengan admin.</span></div><button class="softBtn primary" onclick="openTicketForm()">+ Tiket</button></div><div id="ticketList"></div></div>
 </section>
 
-<section id="admin" class="page"><div class="grid stats" id="adminStats"></div><div class="section grid two"><div class="card cardPad"><h3>Admin control</h3><p class="muted">Login demo: <b>admin</b> / <b>admin123</b>. Authentication ini hanya prototype frontend.</p><button class="softBtn primary" onclick="openUpload()">Upload File</button> <button class="softBtn" onclick="openBotForm()">Tambah Bot</button> <button class="softBtn" onclick="openVoucherForm()">Voucher</button> <button class="softBtn" onclick="openMaintenance()">Maintenance</button> <button class="softBtn" onclick="openAdminPayments()">Pembayaran</button></div><div class="card cardPad"><h3>Informasi</h3><div class="settingRow"><span>Role saat ini</span><b id="adminRole">Guest</b></div><div class="settingRow"><span>Penyimpanan</span><b>localStorage</b></div></div></div></section>
+<section id="admin" class="page"><div class="grid stats" id="adminStats"></div><div class="section grid two"><div class="card cardPad"><h3>Admin control</h3><p class="muted">Login demo: <b>admin</b> / <b>admin123</b>. Authentication menggunakan Supabase Auth.</p><button class="softBtn primary" onclick="openUpload()">Upload File</button> <button class="softBtn" onclick="openBotForm()">Tambah Bot</button> <button class="softBtn" onclick="openVoucherForm()">Voucher</button> <button class="softBtn" onclick="openMaintenance()">Maintenance</button> <button class="softBtn" onclick="openAdminPayments()">Pembayaran</button></div><div class="card cardPad"><h3>Informasi</h3><div class="settingRow"><span>Role saat ini</span><b id="adminRole">Guest</b></div><div class="settingRow"><span>Penyimpanan</span><b>localStorage</b></div></div></div></section>
 <section id="managefiles" class="page"><div class="card cardPad"><div class="sectionHead"><h3>Kelola File</h3><button class="softBtn primary" onclick="openUpload()">+ Upload</button></div><div id="manageFilesList"></div></div></section>
 <section id="managebots" class="page"><div class="card cardPad"><div class="sectionHead"><h3>Kelola Bot</h3><button class="softBtn primary" onclick="openBotForm()">+ Paket</button></div><div id="manageBotsList"></div></div></section>
 <section id="manageorders" class="page"><div class="card cardPad"><h3>Kelola Pesanan</h3><div id="manageOrdersList"></div></div></section>
@@ -505,14 +505,14 @@ function renderProfile(){let d=state.files.reduce((a,b)=>a+b.downloads,0);docume
 function renderAdmin(){document.getElementById('adminRole').textContent=state.user.role}
 function openModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modalBack').classList.add('show')}
 function closeModal(){document.getElementById('modalBack').classList.remove('show')}
-function openLogin(){if(isAdmin()){state.user={name:'Guest',role:'Guest',memberSince:state.user.memberSince};save();applyRole();renderAll();toast('Logout berhasil','Kembali sebagai Guest');return}openModal(`<div class="modalHead"><h3>Login Admin</h3><button class="iconBtn" onclick="closeModal()">×</button></div><p class="muted">Demo prototype frontend. Data disimpan di localStorage.</p><div class="field"><label>Username</label><input id="loginUser" value="admin"></div><div class="field"><label>Password</label><input id="loginPass" type="password" value="admin123"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="doLogin()">Login</button></div>`)}
+function openLogin(){if(isAdmin()){state.user={name:'Guest',role:'Guest',memberSince:state.user.memberSince};save();applyRole();renderAll();toast('Logout berhasil','Kembali sebagai Guest');return}openModal(`<div class="modalHead"><h3>Login Admin</h3><button class="iconBtn" onclick="closeModal()">×</button></div><p class="muted">Login menggunakan Supabase Auth. Data akun dan operasional tersimpan di database ZackStore.</p><div class="field"><label>Username</label><input id="loginUser" value="admin"></div><div class="field"><label>Password</label><input id="loginPass" type="password" value="admin123"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="doLogin()">Login</button></div>`)}
 function doLogin(){if(document.getElementById('loginUser').value==='admin'&&document.getElementById('loginPass').value==='admin123'){state.user={name:'Admin Zack',role:'Admin',memberSince:state.user.memberSince};save();closeModal();applyRole();toast('Login berhasil','Mode Admin aktif');go('admin')}else toast('Login gagal','Username/password salah','error')}
-function openUpload(){if(!isAdmin()){openLogin();return}openModal(`<div class="modalHead"><h3>Upload File</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="drop" id="drop" onclick="document.getElementById('fileInput').click()">${SVG.file}<h3>Pilih atau drop file</h3><p class="muted">File asli akan dibaca oleh File API dan disimpan di browser sebagai metadata/demo.</p></div><div class="field"><label>Nama file</label><input id="upName" placeholder="Nama file"></div><div class="field"><label>Deskripsi</label><textarea id="upDesc"></textarea></div><div class="formGrid"><div class="field"><label>Kategori</label><input id="upCat" value="Lainnya"></div><div class="field"><label>Akses</label><select id="upPublic"><option value="1">Public</option><option value="0">Private</option></select></div></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="saveUpload()">Simpan File</button></div>`);let d=document.getElementById('drop');d.ondragover=e=>{e.preventDefault();d.classList.add('drag')};d.ondragleave=()=>d.classList.remove('drag');d.ondrop=e=>{e.preventDefault();d.classList.remove('drag');pickFile(e.dataTransfer.files)};document.getElementById('fileInput').onchange=e=>pickFile(e.target.files)}
+function openUpload(){if(!isAdmin()){openLogin();return}openModal(`<div class="modalHead"><h3>Upload File</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="drop" id="drop" onclick="document.getElementById('fileInput').click()">${SVG.file}<h3>Pilih atau drop file</h3><p class="muted">File asli akan diunggah ke Supabase Storage. Metadata dan akses file tersimpan di database.</p></div><div class="field"><label>Nama file</label><input id="upName" placeholder="Nama file"></div><div class="field"><label>Deskripsi</label><textarea id="upDesc"></textarea></div><div class="formGrid"><div class="field"><label>Kategori</label><input id="upCat" value="Lainnya"></div><div class="field"><label>Akses</label><select id="upPublic"><option value="1">Public</option><option value="0">Private</option></select></div></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="saveUpload()">Simpan File</button></div>`);let d=document.getElementById('drop');d.ondragover=e=>{e.preventDefault();d.classList.add('drag')};d.ondragleave=()=>d.classList.remove('drag');d.ondrop=e=>{e.preventDefault();d.classList.remove('drag');pickFile(e.dataTransfer.files)};document.getElementById('fileInput').onchange=e=>pickFile(e.target.files)}
 function pickFile(files){let f=files?.[0];if(!f)return;document.getElementById('upName').value=f.name;document.getElementById('upDesc').value='File '+f.name+' ditambahkan dari perangkat.';document.getElementById('upCat').value=f.type.includes('pdf')?'Dokumentasi':(f.type.split('/')[0]||'Lainnya');window._picked=f;toast('File dipilih',f.name,'info')}
 function saveUpload(){let f=window._picked,n=document.getElementById('upName').value.trim();if(!n)return toast('Nama file wajib diisi','','error');state.files.unshift({id:'f'+Date.now(),name:n,desc:document.getElementById('upDesc').value,cat:document.getElementById('upCat').value||'Lainnya',size:f?.size||0,public:document.getElementById('upPublic').value==='1',downloads:0,date:Date.now()});addActivity('File baru ditambahkan: '+n);closeModal();renderAll();toast('File berhasil ditambahkan',n)}
 function openFile(id){let f=state.files.find(x=>x.id===id);if(!f)return;openModal(`<div class="modalHead"><h3>${f.name}</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="filePreview" style="height:150px">${SVG.file}</div><p>${f.desc||'Tidak ada deskripsi.'}</p><div class="formGrid"><div class="settingRow"><span>Ukuran</span><b>${fmtSize(f.size)}</b></div><div class="settingRow"><span>Format</span><b>${f.name.includes('.')?f.name.split('.').pop().toUpperCase():'FILE'}</b></div><div class="settingRow"><span>Kategori</span><b>${f.cat}</b></div><div class="settingRow"><span>Download</span><b>${f.downloads}</b></div></div><div class="modalFoot"><button onclick="copyLink('${f.id}')">Copy Link</button><button onclick="shareFile('${f.id}')">Share</button><button class="primary" onclick="downloadFile('${f.id}')">Download</button></div>`)}
 function downloadFile(id){let f=state.files.find(x=>x.id===id);if(!f)return;f.downloads++;addActivity('Download: '+f.name);save();renderAll();let blob=new Blob([`ZackBot Store\n\nFile: ${f.name}\nDeskripsi: ${f.desc}\nKategori: ${f.cat}\n\nPrototype download: metadata file.`],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f.name+'.txt';a.click();URL.revokeObjectURL(a.href);toast('Download dimulai',f.name)}
-function copyLink(id){navigator.clipboard?.writeText(location.href.split('#')[0]+'#file='+id);toast('Link disalin','Link demo file siap dibagikan','success')}
+function copyLink(id){navigator.clipboard?.writeText(location.href.split('#')[0]+'#file='+id);toast('Link disalin','Link file ZackStore siap dibagikan','success')}
 function shareFile(id){copyLink(id);if(navigator.share){let f=state.files.find(x=>x.id===id);navigator.share({title:f.name,text:f.desc,url:location.href}).catch(()=>{})}}
 function deleteFile(id){if(!isAdmin())return;let f=state.files.find(x=>x.id===id);if(confirm('Hapus '+f.name+'?')){state.files=state.files.filter(x=>x.id!==id);addActivity('File dihapus: '+f.name);renderAll();toast('File dihapus')}}
 function openOrder(id){let b=state.bots.find(x=>x.id===id);openModal(`<div class="modalHead"><h3>Sewa ${b.name}</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Nama</label><input id="oName" placeholder="Nama kamu"></div><div class="field"><label>Nomor WhatsApp</label><input id="oWa" placeholder="08xxxxxxxxxx"></div><div class="field"><label>Link Group WhatsApp</label><input id="oGroup" placeholder="https://chat.whatsapp.com/..."></div><div class="field"><label>Paket</label><select id="oPack">${state.bots.map(x=>`<option value="${x.id}" ${x.id===id?'selected':''}>${x.name} — ${rupiah(x.price)}</option>`).join('')}</select></div><div class="field"><label>Kode Voucher</label><div class="row" style="gap:8px"><input id="oVoucher" placeholder="Contoh: ZACK10" style="flex:1"><button class="softBtn" type="button" onclick="previewVoucher()">Cek</button></div><small id="voucherHint" class="muted"></small></div><div class="field"><label>Catatan</label><textarea id="oNote" placeholder="Catatan tambahan..."></textarea></div><div class="card cardPad"><div class="row between"><span>Total</span><b id="oTotal">${rupiah(b.price)}</b></div><div id="oDiscount" class="muted" style="margin-top:5px"></div></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="createOrder()">Buat Pesanan</button></div>`);document.getElementById('oPack').onchange=e=>{let p=state.bots.find(x=>x.id===e.target.value);document.getElementById('oTotal').textContent=rupiah(p.price)}}
@@ -523,11 +523,11 @@ function escapeHtml(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;',
 function sendOrderMessage(id){let o=state.orders.find(x=>x.id===id),input=document.getElementById('chatInput');if(!o||!input)return;let text=input.value.trim();if(!text)return;o.messages=o.messages||[];o.messages.push({id:Date.now(),from:isAdmin()?'admin':'customer',text,date:Date.now(),read:false});addActivity((isAdmin()?'Admin':'Customer')+' mengirim chat pada '+id);save();orderDetail(id)}
 function openOrderChat(id){orderDetail(id)}
 
-function changeOrder(id,status){let o=state.orders.find(x=>x.id===id);if(!o)return;o.status=status;addActivity('Status pesanan '+id+' menjadi '+status);save();renderAll();toast('Status diperbarui',status)}
+async function changeOrder(id,status){if(!state.user?.id)return openLogin();let map={Menunggu:'pending',Diproses:'processing',Aktif:'active',Selesai:'completed',Dibatalkan:'cancelled'},dbStatus=map[status]||status;let {error}=await sb.from('orders').update({status:dbStatus}).eq('id',id);if(error)return toast('Status gagal diperbarui',error.message,'error');await sync();renderAll();toast('Status diperbarui',status,'success')}
 function openBotForm(id=null){if(!isAdmin())return openLogin();let b=id?state.bots.find(x=>x.id===id):null;openModal(`<div class="modalHead"><h3>${b?'Edit Paket':'Tambah Paket Bot'}</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Nama</label><input id="bName" value="${b?.name||''}"></div><div class="formGrid"><div class="field"><label>Harga</label><input id="bPrice" type="number" value="${b?.price||15000}"></div><div class="field"><label>Durasi</label><input id="bDur" value="${b?.duration||'7 Hari'}"></div></div><div class="field"><label>Fitur, pisahkan dengan koma</label><input id="bFeat" value="${b?.features?.join(', ')||'Support dasar, Panel bot'}"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="saveBot('${id||''}')">Simpan</button></div>`)}
-function saveBot(id){let obj={id:id||'b'+Date.now(),name:document.getElementById('bName').value,price:+document.getElementById('bPrice').value,duration:document.getElementById('bDur').value,features:document.getElementById('bFeat').value.split(',').map(x=>x.trim()).filter(Boolean),available:true};if(id)state.bots=state.bots.map(x=>x.id===id?obj:x);else state.bots.push(obj);addActivity((id?'Paket bot diedit: ':'Paket bot ditambahkan: ')+obj.name);closeModal();renderAll();toast('Paket tersimpan',obj.name)}
+async function saveBot(id){if(!isAdmin())return openLogin();let name=document.getElementById('bName')?.value.trim(),price=Number(document.getElementById('bPrice')?.value||0),duration=document.getElementById('bDur')?.value.trim(),features=document.getElementById('bFeat')?.value.split(',').map(x=>x.trim()).filter(Boolean)||[];if(!name||!Number.isFinite(price)||price<0||!duration)return toast('Data paket belum valid','Lengkapi nama, harga, dan durasi','warning');let payload={name,price,duration,features,available:true};let q=id?sb.from('bot_packages').update(payload).eq('id',id):sb.from('bot_packages').insert(payload);let {error}=await q;if(error)return toast('Paket gagal disimpan',error.message,'error');closeModal();await sync();renderAll();if(window.openAdminPackages)window.openAdminPackages();toast('Paket tersimpan',name,'success')}
 function editBot(id){openBotForm(id)}
-function deleteBot(id){if(confirm('Hapus paket ini?')){let b=state.bots.find(x=>x.id===id);state.bots=state.bots.filter(x=>x.id!==id);addActivity('Paket bot dihapus: '+b.name);renderAll();toast('Paket dihapus')}}
+async function deleteBot(id){if(!isAdmin())return openLogin();let b=state.bots.find(x=>x.id===id);if(!b||!confirm('Hapus paket ini dari database?'))return;let {error}=await sb.from('bot_packages').delete().eq('id',id);if(error)return toast('Paket gagal dihapus',error.message,'error');await sync();renderAll();toast('Paket dihapus',b.name,'success')}
 function showNotifications(){openModal(`<div class="modalHead"><h3>Notification Center</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="list">${state.activities.slice(0,8).map(a=>`<div class="item"><div class="fileIcon">♧</div><div class="itemMain"><b>${a.text}</b><small>${date(a.date)}</small></div></div>`).join('')}</div>`)}
 function editProfile(){openModal(`<div class="modalHead"><h3>Edit Profile</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Nama</label><input id="newName" value="${state.user.name}"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="state.user.name=document.getElementById('newName').value||'Guest';save();applyRole();renderAll();closeModal();toast('Profile diperbarui')">Simpan</button></div>`)}
 function toggleTheme(){document.body.classList.toggle('light');state.settings.theme=document.body.classList.contains('light')?'light':'dark';save();document.getElementById('themeSwitch').classList.toggle('on');toast('Tampilan diperbarui',state.settings.theme==='light'?'Light mode aktif':'Dark mode aktif','info')}
@@ -780,7 +780,7 @@ window.sendOrderMessage=async function(id){if(!state.user?.id)return openLogin()
   document.getElementById('paymentCenterList').innerHTML=orders.slice(0,5).map(o=>`<div class="item"><div class="fileIcon">₫</div><div class="itemMain"><b>#${String(o.id).slice(0,8)} · ${o.packageName||o.package_name}</b><small>${rupiah(o.price)} · ${statusLabel(o.paymentStatus||'unpaid')}</small></div><button class="softBtn" onclick="openPaymentCenter('${o.id}')">${o.paymentStatus==='paid'?'Detail':'Bayar'}</button></div>`).join('')||empty('Belum ada pesanan');
   document.getElementById('workspaceNotifications').innerHTML=x.notifications.slice(0,6).map(n=>`<div class="item" style="opacity:${n.read?.6:1}"><div class="fileIcon">●</div><div class="itemMain"><b>${escapeHtml(n.title)}</b><small>${escapeHtml(n.message)} · ${date(new Date(n.created_at).getTime())}</small></div></div>`).join('')||empty('Belum ada notifikasi');
   renderRentals();
-  document.getElementById('promoReferral').innerHTML=`<div class="settingRow"><span>Kode referral</span><b>${x.referrals[0]?.code||'Belum dibuat'}</b></div><div class="settingRow"><span>Total bonus</span><b>${rupiah(x.referrals.reduce((a,r)=>a+Number(r.bonus||0),0))}</b></div><div class="settingRow"><span>Voucher aktif</span><b>${x.vouchers.length}</b></div><button class="softBtn primary" onclick="openVoucherRedeem()">Gunakan Voucher</button> <button class="softBtn" onclick="createReferralCode()">Buat Referral</button>`;
+  document.getElementById('promoReferral').innerHTML=`<div class="settingRow"><span>Kode referral</span><b>${x.referrals[0]?.code||'Belum dibuat'}</b></div><div class="settingRow"><span>Total bonus</span><b>${rupiah(x.referrals.reduce((a,r)=>a+Number(r.reward_amount||r.bonus||0),0))}</b></div><div class="settingRow"><span>Voucher aktif</span><b>${x.vouchers.length}</b></div><div class="zx-actions"><button class="softBtn primary" onclick="openVoucherRedeem()">Gunakan Voucher</button><button class="softBtn" onclick="createReferralCode()">Buat Referral</button><button class="softBtn" onclick="openReferral()">Referral Center</button><button class="softBtn" onclick="openWallet()">Wallet</button></div>`;
   document.getElementById('ticketList').innerHTML=x.tickets.map(t=>`<div class="item"><div class="fileIcon">?</div><div class="itemMain"><b>${escapeHtml(t.subject)}</b><small>${t.category} · ${statusLabel(t.status)} · ${date(new Date(t.created_at).getTime())}</small></div><button class="softBtn" onclick="openTicket('${t.id}')">Buka</button></div>`).join('')||empty('Belum ada tiket');
  }
  window.renderRentals=function(){const el=document.getElementById('rentalList');if(!el)return;const active=(state.orders||[]).filter(o=>o.status==='active');el.innerHTML=active.map(o=>{let end=o.expiresAt?new Date(o.expiresAt):null,ms=end?end-Date.now():0;let days=end?Math.max(0,Math.ceil(ms/86400000)):null;let st=days===null?'Online':days>0?'Online':'Expired';return `<div class="item"><div class="fileIcon">◇</div><div class="itemMain"><b>${escapeHtml(o.packageName||o.package_name||'Bot')}</b><small>Mulai: ${o.startsAt?date(new Date(o.startsAt).getTime()):'—'} · Expired: ${end?date(end.getTime()):'Permanen'}</small></div><span class="status ${st==='Online'?'s-ok':'s-bad'}">${st}${days!==null?' · '+days+' hari':''}</span></div>`}).join('')||empty('Belum ada bot aktif')}
@@ -848,7 +848,7 @@ window.sendOrderMessage=async function(id){if(!state.user?.id)return openLogin()
  // Auto-expire rental orders locally in the UI and notify through Supabase.
  async function autoExpireRentals(){if(!state.user?.id)return;let changed=false;for(const o of (state.orders||[])){if(o.userId===state.user.id&&o.status==='Aktif'&&o.expiresAt&&new Date(o.expiresAt)<=new Date()){const r=await sb.from('orders').update({status:'completed',bot_status:'offline'}).eq('id',o.id);if(!r.error){await sb.from('notifications').insert({user_id:state.user.id,title:'Bot expired',message:`Masa sewa ${o.packageName||'bot'} telah berakhir.`,type:'expired'});changed=true}}}if(changed)await sync()}
 
- sb.auth.onAuthStateChange((_e,session)=>{if(!session)guest();else setTimeout(async()=>{await sync();await loadWorkspace();renderWorkspace();autoExpireRentals();},0);});
+ sb.auth.onAuthStateChange((_e,session)=>{if(!session)guest();else setTimeout(async()=>{await sync();const me=state.user?.id?await sb.from('profiles').select('suspended').eq('id',state.user.id).maybeSingle():{data:null};if(me.data?.suspended){toast('Akun ditangguhkan','Hubungi admin ZackStore untuk bantuan','error');await sb.auth.signOut();return;}await loadWorkspace();renderWorkspace();autoExpireRentals();},0);});
  window.addEventListener('load',()=>setTimeout(async()=>{if(state.user?.id){await loadWorkspace();renderWorkspace();autoExpireRentals()}},900));
  window.addEventListener('load',()=>setTimeout(sync,500));
 })();
@@ -895,12 +895,45 @@ window.sendOrderMessage=async function(id){if(!state.user?.id)return openLogin()
       openModal('<div class="modalHead"><div><h3>Admin Dashboard V4</h3><small class="muted">Ringkasan operasional ZackStore</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="v4-grid">'+[['Users',(profiles||[]).length],['Orders',(orders||[]).length],['Paid',paid.length],['Revenue',rupiah(revenue)],['Pending Payment',(payments||[]).filter(p=>p.status==='pending').length],['Suspended',(profiles||[]).filter(p=>p.suspended).length],['Referral',(refs||[]).filter(r=>r.status==='qualified').length],['Active Bot',(orders||[]).filter(o=>o.status==='active').length]].map(x=>'<div class="stat"><div class="statTop"><span>'+x[0]+'</span></div><strong>'+x[1]+'</strong></div>').join('')+'</div>');
     };
     window.openAdminUsers=async function(){
-      if(!isAdmin())return openLogin(); const {data,error}=await sb.from('profiles').select('id,name,role,whatsapp,suspended,balance,created_at,last_login_at').order('created_at',{ascending:false}).limit(100); if(error)return toast('Users gagal dimuat',error.message,'error');
-      openModal('<div class="modalHead"><h3>User Management</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div style="max-height:65vh;overflow:auto">'+(data||[]).map(u=>'<div class="card cardPad" style="margin:8px 0"><div class="settingRow"><div><b>'+escapeHtml(u.name||'User')+'</b><small class="v4-mini" style="display:block">'+escapeHtml(u.role||'user')+' · '+escapeHtml(u.whatsapp||'No WhatsApp')+'</small></div><span class="status '+(u.suspended?'s-bad':'s-ok')+'">'+(u.suspended?'Suspended':'Active')+'</span></div><div class="v4-mini" style="margin:6px 0">Saldo: '+rupiah(u.balance||0)+' · Daftar: '+date(new Date(u.created_at).getTime())+'</div><button class="softBtn" onclick="toggleSuspendUser(\''+u.id+'\','+(!u.suspended)+')">'+(u.suspended?'Unsuspend':'Suspend')+'</button></div>').join('')||empty('Belum ada user')+'</div>');
+      if(!isAdmin())return openLogin();
+      const {data,error}=await sb.from('profiles').select('id,name,role,whatsapp,suspended,balance,created_at,last_login_at').order('created_at',{ascending:false}).limit(200);
+      if(error)return toast('Users gagal dimuat',error.message,'error');
+      const users=data||[];
+      const {data:orders}=await sb.from('orders').select('user_id,status,final_price,price,created_at').in('user_id',users.map(u=>u.id).slice(0,200));
+      const stats={};(orders||[]).forEach(o=>{const x=stats[o.user_id]||(stats[o.user_id]={count:0,active:0,spent:0});x.count++;if(o.status==='active')x.active++;if(['paid','active','completed'].includes(o.status))x.spent+=Number(o.final_price??o.price??0)});
+      window._adminUsersCache=users;
+      const esc=escapeHtml;
+      openModal(`<div class="modalHead"><div><h3>User Management</h3><small class="muted">Kelola akun, status, saldo, dan aktivitas user</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+        <div class="formGrid" style="margin-bottom:10px"><div class="field"><label>Cari user</label><input id="adminUserSearch" placeholder="Nama / WhatsApp / ID" oninput="filterAdminUsers()"></div><div class="field"><label>Status</label><select id="adminUserStatus" onchange="filterAdminUsers()"><option value="">Semua</option><option value="active">Active</option><option value="suspended">Suspended</option></select></div></div>
+        <div id="adminUsersList" style="max-height:58vh;overflow:auto"></div>`);
+      window._adminUserStats=stats;filterAdminUsers();
+    };
+    window.filterAdminUsers=function(){
+      const users=window._adminUsersCache||[],stats=window._adminUserStats||{},q=(document.getElementById('adminUserSearch')?.value||'').toLowerCase().trim(),st=document.getElementById('adminUserStatus')?.value||'';
+      const list=users.filter(u=>{const hay=((u.name||'')+' '+(u.whatsapp||'')+' '+u.id).toLowerCase();return (!q||hay.includes(q))&&(!st||(st==='suspended'?u.suspended:!u.suspended));});
+      document.getElementById('adminUsersList').innerHTML=list.map(u=>{const x=stats[u.id]||{count:0,active:0,spent:0};return `<div class="card cardPad" style="margin:8px 0"><div class="settingRow"><div style="min-width:0"><b>${escapeHtml(u.name||'User')}</b><small class="v4-mini" style="display:block">${escapeHtml(u.role||'user')} · ${escapeHtml(u.whatsapp||'No WhatsApp')}</small></div><span class="status ${u.suspended?'s-bad':'s-ok'}">${u.suspended?'Suspended':'Active'}</span></div><div class="v4-mini" style="margin:6px 0">Saldo: ${rupiah(u.balance||0)} · Orders: ${x.count} · Aktif: ${x.active} · Spent: ${rupiah(x.spent)}</div><div class="v4-mini">Daftar: ${date(new Date(u.created_at).getTime())} · Login: ${u.last_login_at?date(new Date(u.last_login_at).getTime()):'Belum tercatat'}</div><div class="v4-bar" style="margin-top:8px"><button class="softBtn" onclick="openAdminUserDetail('${u.id}')">Detail</button><button class="softBtn" onclick="adminAdjustWallet('${u.id}')">Saldo</button><button class="softBtn" onclick="toggleSuspendUser('${u.id}',${!u.suspended})">${u.suspended?'Unsuspend':'Suspend'}</button></div></div>`}).join('')||empty('User tidak ditemukan');
+    };
+    window.openAdminUserDetail=async function(id){
+      if(!isAdmin())return openLogin(); const u=(window._adminUsersCache||[]).find(x=>x.id===id); if(!u)return;
+      const [{data:orders},{data:tx}]=await Promise.all([sb.from('orders').select('id,package_name,status,payment_status,final_price,price,created_at,starts_at,expires_at').eq('user_id',id).order('created_at',{ascending:false}).limit(30),sb.from('wallet_transactions').select('amount,type,description,created_at').eq('user_id',id).order('created_at',{ascending:false}).limit(20)]);
+      openModal(`<div class="modalHead"><div><h3>${escapeHtml(u.name||'User')}</h3><small class="muted">${escapeHtml(u.id)}</small></div><button class="iconBtn" onclick="closeModal();openAdminUsers()">×</button></div><div class="v4-grid"><div class="stat"><span>Saldo</span><strong>${rupiah(u.balance||0)}</strong></div><div class="stat"><span>Orders</span><strong>${(orders||[]).length}</strong></div><div class="stat"><span>Status</span><strong>${u.suspended?'Suspended':'Active'}</strong></div></div><div class="card cardPad" style="margin-top:10px"><b>Orders terakhir</b>${(orders||[]).map(o=>`<div class="item" style="margin-top:8px"><div class="itemMain"><b>${escapeHtml(o.package_name||'Bot')}</b><small>${statusLabel(o.status)} · ${rupiah(o.final_price??o.price)} · ${date(new Date(o.created_at).getTime())}</small></div><button class="softBtn" onclick="orderDetail('${o.id}')">Open</button></div>`).join('')||'<p class="muted">Belum ada order.</p>'}</div><div class="card cardPad" style="margin-top:10px"><b>Wallet terakhir</b>${(tx||[]).map(t=>`<div class="item" style="margin-top:8px"><div class="itemMain"><b>${rupiah(t.amount)} · ${escapeHtml(t.type||'')}</b><small>${escapeHtml(t.description||'')} · ${date(new Date(t.created_at).getTime())}</small></div></div>`).join('')||'<p class="muted">Belum ada transaksi.</p>'}</div>`);
+    };
+    window.adminAdjustWallet=async function(id){
+      if(!isAdmin())return openLogin(); const u=(window._adminUsersCache||[]).find(x=>x.id===id);if(!u)return;
+      const raw=prompt('Nominal perubahan saldo. Gunakan angka negatif untuk mengurangi.', '10000');if(raw===null)return;const amount=Number(raw);if(!Number.isFinite(amount)||amount===0)return toast('Nominal tidak valid','Masukkan angka selain 0','error');const note=prompt('Catatan transaksi:','Penyesuaian saldo oleh admin')||'Penyesuaian saldo oleh admin';
+      const {data,error}=await sb.rpc('admin_adjust_wallet',{p_user_id:id,p_amount:amount,p_description:note});if(error)return toast('Saldo gagal diubah',error.message,'error');toast('Saldo diperbarui',rupiah(data?.balance??0),'success');openAdminUsers();
     };
     window.toggleSuspendUser=async function(id,val){if(!isAdmin())return;const {error}=await sb.from('profiles').update({suspended:val}).eq('id',id);if(error)return toast('Gagal',error.message,'error');toast(val?'User disuspend':'User diaktifkan');openAdminUsers();};
     window.openAdminTickets=async function(){if(!isAdmin())return openLogin();const {data,error}=await sb.from('tickets').select('*').order('created_at',{ascending:false}).limit(100);if(error)return toast('Ticket gagal dimuat',error.message,'error');openModal('<div class="modalHead"><h3>All Tickets</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div style="max-height:65vh;overflow:auto">'+(data||[]).map(t=>'<div class="item" style="margin:8px 0"><div class="itemMain"><b>'+escapeHtml(t.subject)+'</b><small>'+escapeHtml(t.category||'General')+' · '+statusLabel(t.status)+'</small></div><button class="softBtn" onclick="openTicket(\''+t.id+'\')">Open</button></div>').join('')||empty('Tidak ada ticket')+'</div>');};
-    window.openAdminOrders=async function(){if(!isAdmin())return openLogin();const {data,error}=await sb.from('orders').select('*').order('created_at',{ascending:false}).limit(100);if(error)return toast('Order gagal dimuat',error.message,'error');openModal('<div class="modalHead"><h3>All Orders</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div style="max-height:65vh;overflow:auto">'+(data||[]).map(o=>'<div class="card cardPad" style="margin:8px 0"><div class="settingRow"><b>#'+String(o.id).slice(0,8)+' · '+escapeHtml(o.package_name||'Bot')+'</b><span class="status '+orderStatusClass(o.status)+'">'+statusLabel(o.status)+'</span></div><div class="v4-mini">'+rupiah(o.final_price??o.price)+' · '+escapeHtml(o.customer_name||'User')+' · '+escapeHtml(o.customer_phone||'')+'</div><div class="v4-bar" style="margin-top:8px"><button class="softBtn" onclick="orderDetail(\''+o.id+'\')">Detail</button><button class="softBtn" onclick="adminSetBotStatus(\''+o.id+'\',\'online\')">Online</button><button class="softBtn" onclick="adminSetBotStatus(\''+o.id+'\',\'offline\')">Offline</button></div></div>').join('')||empty('Tidak ada order')+'</div>');};
+    window.openAdminOrders=async function(){
+      if(!isAdmin())return openLogin();
+      const {data,error}=await sb.from('orders').select('*').order('created_at',{ascending:false}).limit(300);
+      if(error)return toast('Order gagal dimuat',error.message,'error');
+      window._adminOrdersCache=data||[];
+      const render=()=>{const q=(document.getElementById('adminOrderSearch')?.value||'').toLowerCase().trim(),st=document.getElementById('adminOrderStatus')?.value||'',ps=document.getElementById('adminOrderPayment')?.value||'';const rows=(window._adminOrdersCache||[]).filter(o=>{const hay=[o.id,o.package_name,o.customer_name,o.customer_phone].join(' ').toLowerCase();return(!q||hay.includes(q))&&(!st||o.status===st)&&(!ps||o.payment_status===ps);});document.getElementById('adminOrdersList').innerHTML=rows.map(o=>`<div class="card cardPad" style="margin:8px 0"><div class="settingRow"><div><b>#${String(o.id).slice(0,8)} · ${escapeHtml(o.package_name||'Bot')}</b><small class="v4-mini" style="display:block">${escapeHtml(o.customer_name||'User')} · ${escapeHtml(o.customer_phone||'')}</small></div><span class="status ${orderStatusClass(o.status)}">${statusLabel(o.status)}</span></div><div class="v4-mini" style="margin:6px 0">${rupiah(o.final_price??o.price)} · Payment: ${statusLabel(o.payment_status||'unpaid')} · ${date(new Date(o.created_at).getTime())}</div><div class="v4-bar"><button class="softBtn" onclick="orderDetail('${o.id}')">Detail</button><button class="softBtn" onclick="adminSetBotStatus('${o.id}','online')">Online</button><button class="softBtn" onclick="adminSetBotStatus('${o.id}','offline')">Offline</button></div></div>`).join('')||empty('Order tidak ditemukan')};
+      openModal(`<div class="modalHead"><div><h3>Order Management</h3><small class="muted">Cari, filter, cek pembayaran, dan kontrol status bot.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="formGrid"><div class="field"><label>Cari order</label><input id="adminOrderSearch" placeholder="ID / nama / WhatsApp / paket" oninput="window._adminOrdersRender()"></div><div class="field"><label>Status order</label><select id="adminOrderStatus" onchange="window._adminOrdersRender()"><option value="">Semua</option><option value="pending">Menunggu</option><option value="processing">Diproses</option><option value="active">Aktif</option><option value="completed">Selesai</option><option value="cancelled">Dibatalkan</option></select></div><div class="field"><label>Status pembayaran</label><select id="adminOrderPayment" onchange="window._adminOrdersRender()"><option value="">Semua</option><option value="unpaid">Belum bayar</option><option value="checking">Dicek</option><option value="paid">Dibayar</option><option value="rejected">Ditolak</option></select></div></div><div id="adminOrdersList" style="max-height:60vh;overflow:auto"></div>`);
+      window._adminOrdersRender=render;render();
+    };
     window.adminSetBotStatus=async function(id,status){const {error}=await sb.from('orders').update({bot_status:status}).eq('id',id);if(error)return toast('Status bot gagal',error.message,'error');toast('Status bot diperbarui',status);openAdminOrders();};
     window.openAdminWallet=async function(){if(!isAdmin())return openLogin();const {data,error}=await sb.from('wallet_transactions').select('*').order('created_at',{ascending:false}).limit(100);if(error)return toast('Wallet gagal dimuat',error.message,'error');openModal('<div class="modalHead"><h3>Wallet Transactions</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div style="max-height:65vh;overflow:auto">'+(data||[]).map(x=>'<div class="item"><div class="itemMain"><b>'+rupiah(x.amount)+' · '+escapeHtml(x.type)+'</b><small>'+escapeHtml(x.description||'')+' · '+date(new Date(x.created_at).getTime())+'</small></div></div>').join('')||empty('Belum ada transaksi')+'</div>');};
     // Use secure RPC for admin payment verification if available.
@@ -917,6 +950,406 @@ window.sendOrderMessage=async function(id){if(!state.user?.id)return openLogin()
   }
   wait();
 })();
+</script>
+
+<style>
+.zx-payline{display:flex;gap:10px;align-items:flex-start;margin:10px 0}.zx-dot{width:12px;height:12px;border-radius:50%;background:var(--muted2);margin-top:4px;box-shadow:0 0 0 4px rgba(255,255,255,.04)}.zx-dot.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(72,214,160,.10)}.zx-dot.warn{background:var(--warn);box-shadow:0 0 0 4px rgba(245,189,98,.10)}.zx-dot.bad{background:var(--danger);box-shadow:0 0 0 4px rgba(255,113,137,.10)}.zx-payline b{display:block}.zx-payline small{color:var(--muted)}
+.zx-count{font-variant-numeric:tabular-nums;font-weight:800}.zx-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.zx-filter{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.zx-filter button.active{border-color:var(--accent);background:rgba(123,140,255,.14)}
+</style>
+<script>
+(function(){
+ const wait=()=>window.ZACKSTORE_DB?init():setTimeout(wait,250);
+ function init(){
+  const sb=window.ZACKSTORE_DB;
+  const esc=x=>typeof escapeHtml==='function'?escapeHtml(String(x??'')):String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmtLeft=o=>{if(!o?.expiresAt)return 'Permanen';const ms=new Date(o.expiresAt)-Date.now();if(ms<=0)return 'Expired';let s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60);s%=60;return `${d}h ${h}j ${m}m ${s}d`};
+  const payCfg=()=>((v2().appSettings||[]).find(x=>x.key==='payment')||{}).value||{};
+  window.openPaymentCenter=async function(orderId){
+   if(!state.user?.id)return openLogin();
+   const orders=state.orders||[];const o=orders.find(x=>x.id===orderId)||orders.find(x=>!['completed','cancelled'].includes(String(x.status))&&x.paymentStatus!=='paid');
+   if(!o)return toast('Tidak ada pesanan','Buat pesanan bot terlebih dahulu','info');
+   const cfg=payCfg();
+   const myPays=(v2().payments||[]).filter(p=>p.order_id===o.id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+   const latest=myPays[0];
+   const status=o.paymentStatus||'unpaid';
+   const step=(key,label,desc)=>{let cls='';if(key==='done')cls='ok';else if(key==='current')cls=status==='rejected'?'bad':'warn';return `<div class="zx-payline"><span class="zx-dot ${cls}"></span><div><b>${label}</b><small>${desc}</small></div></div>`};
+   const timeline=status==='paid'?step('done','Pembayaran diterima','Order sudah aktif')+step('done','Rental aktif','Bot sedang berjalan'):status==='checking'?step('done','Bukti dikirim','Bukti pembayaran sudah masuk')+step('current','Sedang diverifikasi','Admin sedang memeriksa pembayaran'):status==='rejected'?step('done','Pembayaran dikirim','Bukti sebelumnya ditolak')+step('current','Perlu pembayaran ulang',latest?.rejection_reason||'Kirim bukti pembayaran yang benar'):step('current','Menunggu pembayaran','Silakan selesaikan pembayaran')+step('current','Bukti dikirim','Setelah upload, admin akan memverifikasi');
+   const methods=Array.isArray(cfg.methods)&&cfg.methods.length?cfg.methods:['QRIS','Transfer Bank','E-Wallet'];
+   openModal(`<div class="modalHead"><div><h3>Payment Center</h3><small class="muted">Pesanan #${String(o.id).slice(0,8)}</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="card cardPad"><div class="row between"><div><b>${esc(o.packageName||o.package_name||'Bot')}</b><small class="muted" style="display:block">${esc(o.name||'')} · ${esc(o.wa||'')}</small></div><b style="font-size:22px">${rupiah(o.finalPrice??o.price??0)}</b></div></div>
+    <div class="card cardPad" style="margin-top:10px"><h4 style="margin:0 0 8px">Status pembayaran</h4>${timeline}${status==='rejected'&&latest?.rejection_reason?`<div class="empty" style="margin-top:8px">Alasan: ${esc(latest.rejection_reason)}</div>`:''}</div>
+    ${status!=='paid'?`<div class="card cardPad" style="margin-top:10px"><h4 style="margin:0 0 8px">Instruksi pembayaran</h4><div class="muted">${esc(cfg.instructions||'Bayar sesuai nominal lalu upload bukti pembayaran. Admin akan memverifikasi secara manual.')}</div>${cfg.qris_image?`<img src="${esc(cfg.qris_image)}" style="max-width:230px;width:100%;border-radius:18px;margin:14px auto;display:block">`:''}<div class="field"><label>Metode</label><select id="paymentMethod">${methods.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div><div class="field"><label>Bukti pembayaran</label><input id="paymentProof" type="file" accept="image/*,.pdf"></div><div class="muted" style="font-size:12px">Maksimum file mengikuti pengaturan keamanan ZackStore.</div></div>`:''}
+    <div class="modalFoot">${status!=='paid'?`<button class="primary" onclick="submitPayment('${o.id}')">${status==='checking'?'Kirim Bukti Baru':'Kirim Pembayaran'}</button>`:'<button class="primary" onclick="closeModal()">Selesai</button>'}</div>`);
+  };
+  window.submitPayment=async function(orderId){
+   if(!state.user?.id)return openLogin();
+   const o=(state.orders||[]).find(x=>x.id===orderId);if(!o)return;
+   if(o.paymentStatus==='paid')return toast('Sudah dibayar','Pesanan ini sudah aktif','info');
+   const f=document.getElementById('paymentProof')?.files?.[0],method=document.getElementById('paymentMethod')?.value||'QRIS';
+   if(!f)return toast('Bukti belum dipilih','Upload bukti pembayaran terlebih dahulu','warning');
+   if(f.size>10*1024*1024)return toast('File terlalu besar','Maksimum 10 MB','warning');
+   const duplicate=(v2().payments||[]).some(p=>p.order_id===orderId&&['pending','checking'].includes(p.status));
+   if(duplicate)return toast('Sedang diverifikasi','Tunggu hasil pemeriksaan admin atau kirim ulang setelah ditolak','info');
+   const path=`${state.user.id}/payments/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+   toast('Mengunggah bukti','Tunggu sebentar...','info');
+   const up=await sb.storage.from('zackstore-files').upload(path,f,{upsert:false,contentType:f.type||'application/octet-stream'});if(up.error)return toast('Upload gagal',up.error.message,'error');
+   const amount=Number(o.finalPrice??o.price??0);
+   const ins=await sb.from('payments').insert({order_id:orderId,user_id:state.user.id,amount,method,proof_path:path,status:'pending'});
+   if(ins.error){await sb.storage.from('zackstore-files').remove([path]);return toast('Pembayaran gagal',ins.error.message,'error')}
+   await sb.from('orders').update({payment_status:'checking'}).eq('id',orderId).eq('user_id',state.user.id);
+   await sb.from('notifications').insert({user_id:state.user.id,title:'Pembayaran dikirim',message:`Bukti pembayaran #${String(orderId).slice(0,8)} sedang diverifikasi.`,type:'payment'});
+   closeModal();await sync();await loadWorkspace();renderWorkspace();toast('Pembayaran terkirim','Menunggu verifikasi admin','success');
+  };
+  window.renderRentals=function(){
+   const el=document.getElementById('rentalList');if(!el)return;const active=(state.orders||[]).filter(o=>String(o.status).toLowerCase()==='aktif'||String(o.status).toLowerCase()==='active');
+   el.innerHTML=active.map(o=>{const expired=o.expiresAt&&new Date(o.expiresAt)<=new Date();const online=(o.botStatus||'online')==='online'&&!expired;return `<div class="item"><div class="fileIcon">◇</div><div class="itemMain"><b>${esc(o.packageName||o.package_name||'Bot')}</b><small>Mulai: ${o.startsAt?date(new Date(o.startsAt).getTime()):'—'} · Expired: ${o.expiresAt?date(new Date(o.expiresAt).getTime()):'Permanen'}</small><small class="zx-count" data-expire="${o.expiresAt||''}">${o.expiresAt?fmtLeft(o):'Permanen'}</small></div><span class="status ${online?'s-ok':'s-bad'}">${online?'Online':'Offline'}</span><div class="zx-actions"><button class="softBtn" onclick="openRentalDetail('${o.id}')">Detail</button><button class="softBtn" onclick="renewRental('${o.id}')">Perpanjang</button>${o.groupLink?`<button class="softBtn" onclick="window.open('${esc(o.groupLink)}','_blank','noopener')">Group</button>`:''}</div></div>`}).join('')||empty('Belum ada bot aktif');
+  };
+  window.openRentalDetail=function(id){const o=(state.orders||[]).find(x=>x.id===id);if(!o)return;openModal(`<div class="modalHead"><div><h3>${esc(o.packageName||'Bot Rental')}</h3><small class="muted">#${String(o.id).slice(0,8)}</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="v4-grid"><div class="stat"><span>Status</span><strong>${esc(o.botStatus||'online')}</strong></div><div class="stat"><span>Mulai</span><strong>${o.startsAt?date(new Date(o.startsAt).getTime()):'—'}</strong></div><div class="stat"><span>Berakhir</span><strong>${o.expiresAt?date(new Date(o.expiresAt).getTime()):'Permanen'}</strong></div><div class="stat"><span>Sisa</span><strong class="zx-count">${fmtLeft(o)}</strong></div></div><div class="zx-actions"><button class="softBtn primary" onclick="renewRental('${o.id}')">Perpanjang Sewa</button>${o.groupLink?`<button class="softBtn" onclick="window.open('${esc(o.groupLink)}','_blank','noopener')">Buka Group</button>`:''}</div>`)};
+  window.renewRental=function(id){const o=(state.orders||[]).find(x=>x.id===id);if(!o)return;const b=(state.bots||[]).find(x=>String(x.name)===String(o.packageName||o.package_name));if(!b)return toast('Paket tidak ditemukan','Admin mungkin sudah mengubah paket','warning');closeModal();setTimeout(()=>openOrder(b.id),50)};
+  setInterval(()=>{document.querySelectorAll('.zx-count[data-expire]').forEach(el=>{const t=el.dataset.expire;if(!t)return;const ms=new Date(t)-Date.now();if(ms<=0){el.textContent='Expired';return}let s=Math.floor(ms/1000),d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60);s%=60;el.textContent=`${d}h ${h}j ${m}m ${s}d`})},1000);
+  window.openAdminPayments=async function(){
+   if(!isAdmin())return openLogin();const [{data:payments,error:pe},{data:orders,error:oe}]=await Promise.all([sb.from('payments').select('*').order('created_at',{ascending:false}).limit(100),sb.from('orders').select('id,package_name,customer_name,customer_phone,final_price,price')]);
+   if(pe||oe)return toast('Pembayaran gagal dimuat',(pe||oe)?.message||'Error','error');let list=payments||[];
+   const render=filter=>{const rows=list.filter(p=>filter==='all'||p.status===filter);const map=new Map((orders||[]).map(o=>[o.id,o]));document.getElementById('zxAdminPayRows').innerHTML=rows.map(pay=>{const o=map.get(pay.order_id)||{};return `<div class="card cardPad"><div class="settingRow"><div><b>#${String(pay.order_id).slice(0,8)} · ${esc(o.package_name||'Pesanan')}</b><small class="muted" style="display:block">${rupiah(pay.amount)} · ${esc(pay.method||'—')} · ${date(new Date(pay.created_at).getTime())}</small></div><span class="status ${orderStatusClass(pay.status)}">${statusLabel(pay.status)}</span></div><div class="zx-actions"><button class="softBtn" onclick="viewPaymentProof('${pay.id}')">Bukti</button>${pay.status==='pending'?`<button class="softBtn primary" onclick="verifyPayment('${pay.id}','${pay.order_id}','approve')">Approve</button><button class="softBtn" onclick="verifyPayment('${pay.id}','${pay.order_id}','reject')">Tolak</button>`:''}</div></div>`}).join('')||empty('Tidak ada pembayaran pada filter ini')};
+   openModal(`<div class="modalHead"><div><h3>Payment Queue</h3><small class="muted">Verifikasi pembayaran user</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="zx-filter"><button class="softBtn active" onclick="adminPayFilter('all',this)">Semua</button><button class="softBtn" onclick="adminPayFilter('pending',this)">Pending</button><button class="softBtn" onclick="adminPayFilter('approved',this)">Approved</button><button class="softBtn" onclick="adminPayFilter('rejected',this)">Rejected</button></div><div id="zxAdminPayRows" style="display:grid;gap:10px;max-height:60vh;overflow:auto"></div>`);
+   window._zxAdminPayRender=render;render('all');
+  };
+  window.adminPayFilter=(f,btn)=>{document.querySelectorAll('.zx-filter button').forEach(x=>x.classList.remove('active'));btn?.classList.add('active');window._zxAdminPayRender?.(f)};
+  window.verifyPayment=async function(paymentId,orderId,action){
+   if(!isAdmin())return openLogin();const reason=action==='reject'?(prompt('Alasan penolakan:')||null):null;
+   const r=await sb.rpc('admin_verify_payment',{p_payment_id:paymentId,p_order_id:orderId,p_approve:action==='approve',p_rejection_reason:reason});
+   if(!r.error){closeModal();await sync();await loadWorkspace();renderWorkspace();toast(action==='approve'?'Pembayaran disetujui':'Pembayaran ditolak',action==='approve'?'Rental aktif':'User diberi alasan penolakan',action==='approve'?'success':'warning');return}
+   toast('Verifikasi gagal',r.error.message,'error');
+  };
+  renderRentals();
+ }
+ wait();
+})();
+</script>
+
+<style>
+.zx-v6-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.zx-v6-balance{font-size:28px;font-weight:900}.zx-v6-code{font-family:ui-monospace,SFMono-Regular,monospace;letter-spacing:1px}.zx-v6-card{padding:16px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.035)}
+@media(max-width:700px){.zx-v6-grid{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+ const wait=()=>window.ZACKSTORE_DB?init():setTimeout(wait,250);
+ function init(){
+  const sb=window.ZACKSTORE_DB;
+  const esc=x=>typeof escapeHtml==='function'?escapeHtml(String(x??'')):String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  window.openWallet=async function(){
+   if(!state.user?.id)return openLogin();
+   const [{data:p,error:pe},{data:tx,error:te}]=await Promise.all([
+    sb.from('profiles').select('balance').eq('id',state.user.id).maybeSingle(),
+    sb.from('wallet_transactions').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(30)
+   ]);
+   if(pe||te)return toast('Wallet gagal dimuat',(pe||te)?.message||'Error','error');
+   openModal(`<div class="modalHead"><div><h3>Wallet ZackStore</h3><small class="muted">Saldo dapat dipakai untuk pembayaran rental.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="zx-v6-card"><small class="muted">Saldo tersedia</small><div class="zx-v6-balance">${rupiah(p?.balance||0)}</div></div>
+    <div style="margin-top:12px"><h4>Riwayat transaksi</h4>${(tx||[]).map(x=>`<div class="item"><div class="itemMain"><b>${rupiah(x.amount)} · ${esc(x.type)}</b><small>${esc(x.description||'—')} · ${date(new Date(x.created_at).getTime())}</small></div></div>`).join('')||empty('Belum ada transaksi')}</div>`);
+  };
+  window.openReferral=async function(){
+   if(!state.user?.id)return openLogin();
+   const {data:mine,error}=await sb.from('referrals').select('*').eq('referrer_id',state.user.id).order('created_at',{ascending:false});
+   if(error)return toast('Referral gagal dimuat',error.message,'error');
+   const total=(mine||[]).reduce((n,x)=>n+Number(x.reward_amount||x.bonus||0),0);
+   openModal(`<div class="modalHead"><div><h3>Referral Center</h3><small class="muted">Ajak user baru dan dapatkan bonus setelah order memenuhi syarat.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="zx-v6-grid"><div class="zx-v6-card"><small class="muted">Kode kamu</small><div class="zx-v6-code" style="margin-top:6px">${esc(mine?.[0]?.code||'Belum dibuat')}</div></div><div class="zx-v6-card"><small class="muted">Bonus terkumpul</small><div class="zx-v6-balance" style="font-size:22px">${rupiah(total)}</div></div><div class="zx-v6-card"><small class="muted">Referral qualified</small><div class="zx-v6-balance" style="font-size:22px">${(mine||[]).filter(x=>x.status==='qualified').length}</div></div></div>
+    <div class="field" style="margin-top:12px"><label>Masukkan kode referral teman</label><div class="row" style="gap:8px"><input id="claimReferralCode" placeholder="ZACKABC123" style="flex:1"><button class="softBtn primary" onclick="claimReferral()">Gunakan</button></div><small class="muted">Kode referral hanya bisa diklaim sekali per akun.</small></div>
+    <div style="margin-top:12px">${(mine||[]).map(x=>`<div class="item"><div class="itemMain"><b>${esc(x.code)}</b><small>${esc(x.status||'active')} · Bonus ${rupiah(x.reward_amount||x.bonus||0)}</small></div></div>`).join('')||empty('Belum punya kode referral')}</div>`);
+  };
+  window.claimReferral=async function(){
+   if(!state.user?.id)return openLogin();
+   const code=document.getElementById('claimReferralCode')?.value.trim().toUpperCase();
+   if(!code)return toast('Kode kosong','Masukkan kode referral','warning');
+   const {data,error}=await sb.rpc('claim_referral',{p_code:code});
+   if(error)return toast('Referral gagal',error.message,'error');
+   closeModal();await loadWorkspace();renderWorkspace();toast('Referral berhasil','Kode referral berhasil dikaitkan ke akunmu','success');
+  };
+  window.payOrderWithWallet=async function(orderId){
+   if(!state.user?.id)return openLogin();
+   const ok=confirm('Gunakan saldo Wallet untuk membayar pesanan ini?');if(!ok)return;
+   const {data,error}=await sb.rpc('pay_order_with_wallet',{p_order_id:orderId});
+   if(error)return toast('Pembayaran wallet gagal',error.message,'error');
+   closeModal();await sync();await loadWorkspace();renderWorkspace();toast('Pembayaran berhasil',data?.message||'Saldo wallet berhasil digunakan','success');
+  };
+  const oldOpen=window.openPaymentCenter;
+  window.openPaymentCenter=async function(orderId){
+   await oldOpen(orderId);
+   const o=(state.orders||[]).find(x=>x.id===orderId);
+   if(!o||o.paymentStatus==='paid')return;
+   const host=document.querySelector('.modalFoot');
+   if(host&&!host.querySelector('[data-wallet-pay]')){
+    const b=document.createElement('button');b.className='softBtn';b.dataset.walletPay='1';b.textContent='Bayar dengan Wallet';b.onclick=()=>payOrderWithWallet(orderId);host.prepend(b);
+   }
+  };
+  const oldRender=window.renderWorkspace;
+  window.renderWorkspace=function(){
+   oldRender?.();
+   const admin=document.querySelector('#admin .card.cardPad');
+   if(admin&&!document.getElementById('zxV6Admin')){
+    const box=document.createElement('div');box.id='zxV6Admin';box.className='v4-bar';box.style.marginTop='10px';
+    box.innerHTML='<button class="softBtn" onclick="openWallet()">Wallet</button><button class="softBtn" onclick="openReferral()">Referral</button>';
+    admin.appendChild(box);
+   }
+  };
+ }
+ wait();
+})();
+</script>
+
+<style>
+.pc-head{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.035)}.pc-head small{display:block;color:var(--muted);margin-top:3px}.pc-avatar{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,rgba(124,92,255,.45),rgba(0,209,255,.25));font-size:22px;font-weight:900;overflow:hidden}.pc-avatar img{width:100%;height:100%;object-fit:cover}.pc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.pc-stat{padding:12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03)}.pc-stat small,.pc-stat b{display:block}.pc-stat small{color:var(--muted);margin-bottom:5px}.pc-history{margin-top:14px;max-height:260px;overflow:auto}.pc-actions{display:flex;gap:8px;margin-bottom:10px}.notif-list{display:grid;gap:8px;max-height:60vh;overflow:auto}.notif-row{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.025)}.notif-row.unread{background:rgba(120,90,255,.09)}.notif-dot{width:8px;height:8px;border-radius:50%;background:#7c5cff;flex:0 0 auto}.rev-chart{height:210px;display:flex;align-items:end;justify-content:space-around;gap:8px;margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.025)}.rev-col{height:180px;flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px;font-size:10px;min-width:0}.rev-col small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.rev-bar{width:min(34px,70%);border-radius:9px 9px 3px 3px;background:linear-gradient(180deg,#8b6cff,#36c9ff);box-shadow:0 8px 25px rgba(90,100,255,.22)}.rev-col span{color:var(--muted)}@media(max-width:700px){.pc-grid{grid-template-columns:1fr}.rev-chart{gap:3px}.rev-col small{font-size:8px}}
+</style>
+<script>
+(function(){
+ const wait=()=>window.ZACKSTORE_DB?init():setTimeout(wait,250);
+ function init(){
+  const sb=window.ZACKSTORE_DB;
+  const esc=x=>typeof escapeHtml==='function'?escapeHtml(String(x??'')):String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const money=x=>typeof rupiah==='function'?rupiah(Number(x||0)):('Rp '+Number(x||0).toLocaleString('id-ID'));
+  const safeDate=x=>x?date(new Date(x).getTime()):'—';
+
+  // PROFILE CENTER
+  window.openProfileCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const [{data:p,error:pe},{data:hist,error:he}]=await Promise.all([
+    sb.from('profiles').select('id,name,role,whatsapp,avatar_url,balance,suspended,created_at,last_login_at').eq('id',state.user.id).maybeSingle(),
+    sb.from('login_history').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(10)
+   ]);
+   if(pe)return toast('Profile gagal dimuat',pe.message,'error');
+   openModal(`<div class="modalHead"><div><h3>Profile Center</h3><small class="muted">Kelola akun ZackStore</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="pc-head"><div class="pc-avatar">${p?.avatar_url?`<img src="${esc(p.avatar_url)}" alt="Avatar">`:(esc((p?.name||'U')[0]||'U'))}</div><div><b>${esc(p?.name||'User')}</b><small>${esc(p?.role||'user')} · ${p?.suspended?'Suspended':'Active'}</small></div></div>
+    <div class="field"><label>Nama</label><input id="pcName" value="${esc(p?.name||'User')}"></div>
+    <div class="field"><label>WhatsApp</label><input id="pcWa" value="${esc(p?.whatsapp||'')}" placeholder="08xxxxxxxxxx"></div>
+    <div class="field"><label>Avatar</label><input id="pcAvatar" type="file" accept="image/png,image/jpeg,image/webp"></div>
+    <div class="pc-grid"><div class="pc-stat"><small>Saldo Wallet</small><b>${money(p?.balance)}</b></div><div class="pc-stat"><small>Member sejak</small><b>${safeDate(p?.created_at)}</b></div><div class="pc-stat"><small>Login terakhir</small><b>${safeDate(p?.last_login_at)}</b></div></div>
+    <div class="modalFoot"><button class="softBtn" onclick="changePassword()">Ganti Password</button><button class="primary" onclick="saveProfileCenter()">Simpan Profile</button></div>
+    <div class="pc-history"><h4>Riwayat Login</h4>${(hist||[]).map(h=>`<div class="item"><div class="itemMain"><b>${esc(h.device||'Perangkat')}</b><small>${esc(h.ip_address||'')} · ${safeDate(h.created_at)}</small></div></div>`).join('')||empty('Belum ada riwayat login')}</div>`);
+  };
+  window.saveProfileCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const name=document.getElementById('pcName')?.value.trim()||'User', wa=document.getElementById('pcWa')?.value.trim()||null, f=document.getElementById('pcAvatar')?.files?.[0];
+   let avatar_url=null;
+   if(f){if(f.size>5*1024*1024)return toast('Avatar terlalu besar','Maksimum 5 MB','warning');const path=`${state.user.id}/avatar-${Date.now()}.${(f.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'')}`;const up=await sb.storage.from('zackstore-files').upload(path,f,{upsert:false,contentType:f.type||'image/jpeg'});if(up.error)return toast('Avatar gagal diupload',up.error.message,'error');const pub=await sb.storage.from('zackstore-files').createSignedUrl(path,60*60*24*365);if(pub.error)return toast('Avatar URL gagal dibuat',pub.error.message,'error');avatar_url=pub.data.signedUrl;}
+   const patch={name,whatsapp:wa,updated_at:new Date().toISOString()};if(avatar_url)patch.avatar_url=avatar_url;
+   const {error}=await sb.from('profiles').update(patch).eq('id',state.user.id);if(error)return toast('Profile gagal disimpan',error.message,'error');closeModal();await sync();renderAll();toast('Profile tersimpan','Data akun berhasil diperbarui','success');
+  };
+  window.changePassword=async function(){
+   const email=state.user?.email||'';if(!email)return toast('Email tidak tersedia','Akun ini belum punya email autentikasi','warning');
+   openModal(`<div class="modalHead"><h3>Ganti Password</h3><button class="iconBtn" onclick="closeModal()">×</button></div><p class="muted">Masukkan password baru untuk akun ${esc(email)}.</p><div class="field"><label>Password baru</label><input id="newPassword" type="password" minlength="8" placeholder="Minimal 8 karakter"></div><div class="field"><label>Ulangi password</label><input id="newPassword2" type="password" minlength="8"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="saveNewPassword()">Simpan</button></div>`);
+  };
+  window.saveNewPassword=async function(){const a=document.getElementById('newPassword')?.value||'',b=document.getElementById('newPassword2')?.value||'';if(a.length<8)return toast('Password terlalu pendek','Minimal 8 karakter','warning');if(a!==b)return toast('Password berbeda','Ulangi password dengan benar','warning');const {error}=await sb.auth.updateUser({password:a});if(error)return toast('Gagal mengganti password',error.message,'error');closeModal();toast('Password diperbarui','Password baru berhasil disimpan','success')};
+
+  // NOTIFICATION CENTER
+  window.openNotificationCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const {data,error}=await sb.from('notifications').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(100);if(error)return toast('Notifikasi gagal dimuat',error.message,'error');
+   openModal(`<div class="modalHead"><div><h3>Notification Center</h3><small class="muted">Semua pemberitahuan akunmu</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="pc-actions"><button class="softBtn" onclick="markNotificationsRead();openNotificationCenter()">Tandai semua dibaca</button></div><div class="notif-list">${(data||[]).map(n=>`<div class="notif-row ${n.read?'':'unread'}"><div class="notif-dot"></div><div class="itemMain"><b>${esc(n.title||'Notifikasi')}</b><small>${esc(n.message||'')} · ${safeDate(n.created_at)}</small></div>${n.order_id?`<button class="softBtn" onclick="closeModal();orderDetail('${n.order_id}')">Buka</button>`:''}</div>`).join('')||empty('Belum ada notifikasi')}</div>`);
+  };
+
+  // TOP UP WALLET
+  window.openWalletTopup=async function(){
+   if(!state.user?.id)return openLogin();
+   const sets=v2().appSettings||[];const methods=sets.find(x=>x.key==='payment')?.value?.methods||['QRIS','Transfer Bank','E-Wallet'];
+   openModal(`<div class="modalHead"><div><h3>Top Up Wallet</h3><small class="muted">Saldo akan masuk setelah admin memverifikasi bukti pembayaran.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Nominal</label><input id="topupAmount" type="number" min="1000" step="1000" placeholder="Contoh 25000"></div><div class="field"><label>Metode</label><select id="topupMethod">${methods.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Bukti pembayaran</label><input id="topupProof" type="file" accept="image/*,.pdf"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="submitWalletTopup()">Kirim Top Up</button></div>`);
+  };
+  window.submitWalletTopup=async function(){
+   const amount=Math.floor(Number(document.getElementById('topupAmount')?.value||0)), method=document.getElementById('topupMethod')?.value||'QRIS', f=document.getElementById('topupProof')?.files?.[0];
+   if(amount<1000)return toast('Nominal tidak valid','Minimal top up Rp1.000','warning');if(amount>10000000)return toast('Nominal terlalu besar','Maksimum Rp10.000.000','warning');if(!f)return toast('Bukti belum dipilih','Upload bukti pembayaran','warning');if(f.size>10*1024*1024)return toast('File terlalu besar','Maksimum 10 MB','warning');
+   const path=`${state.user.id}/wallet/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const up=await sb.storage.from('zackstore-files').upload(path,f,{upsert:false,contentType:f.type||'application/octet-stream'});if(up.error)return toast('Upload gagal',up.error.message,'error');
+   const {error}=await sb.from('wallet_topups').insert({user_id:state.user.id,amount,method,proof_path:path,status:'pending'});if(error){await sb.storage.from('zackstore-files').remove([path]);return toast('Top up gagal',error.message,'error')}
+   await sb.from('notifications').insert({user_id:state.user.id,title:'Top up dikirim',message:`Top up ${money(amount)} sedang menunggu verifikasi admin.`,type:'wallet'});closeModal();toast('Top up terkirim','Menunggu verifikasi admin','success');
+  };
+
+  // RENTAL EXTENSION
+  window.openExtension=async function(orderId){
+   const o=(state.orders||[]).find(x=>x.id===orderId);if(!o)return;const b=(state.bots||[]).find(x=>String(x.name)===String(o.packageName||o.package_name));if(!b)return toast('Paket tidak ditemukan','Admin mungkin sudah mengubah paket','warning');
+   openModal(`<div class="modalHead"><div><h3>Perpanjang Rental</h3><small class="muted">${esc(o.packageName||'Bot')}</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Pilih durasi</label><select id="extDuration"><option value="1">1x paket — ${money(b.price)}</option><option value="2">2x paket — ${money(Number(b.price)*2)}</option><option value="3">3x paket — ${money(Number(b.price)*3)}</option></select></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="payExtension('${orderId}')">Bayar dengan Wallet</button></div>`);
+  };
+  window.payExtension=async function(orderId){const mult=Number(document.getElementById('extDuration')?.value||1);const {data,error}=await sb.rpc('extend_rental_with_wallet',{p_order_id:orderId,p_multiplier:mult});if(error)return toast('Perpanjangan gagal',error.message,'error');closeModal();await sync();await loadWorkspace();renderWorkspace();toast('Rental diperpanjang',`Masa aktif ditambah ${mult}x paket`,'success')};
+
+  // ADMIN REVENUE DASHBOARD
+  window.openRevenueDashboard=async function(){
+   if(!isAdmin())return openLogin();
+   const [{data:orders,error:oe},{data:payments,error:pe}]=await Promise.all([sb.from('orders').select('id,package_name,final_price,price,payment_status,status,created_at'),sb.from('payments').select('amount,status,created_at')]);if(oe||pe)return toast('Dashboard gagal dimuat',(oe||pe).message,'error');
+   const paid=(orders||[]).filter(o=>o.payment_status==='paid'), revenue=paid.reduce((n,o)=>n+Number(o.final_price??o.price??0),0), active=paid.filter(o=>o.status==='active').length;
+   const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const key=d.toISOString().slice(0,10),val=paid.filter(o=>String(o.created_at).slice(0,10)===key).reduce((n,o)=>n+Number(o.final_price??o.price??0),0);days.push({key,val,label:d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})})}const max=Math.max(1,...days.map(x=>x.val));
+   openModal(`<div class="modalHead"><div><h3>Revenue Dashboard</h3><small class="muted">Performa 7 hari terakhir</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="v4-grid"><div class="stat"><span>Total Revenue</span><strong>${money(revenue)}</strong></div><div class="stat"><span>Paid Orders</span><strong>${paid.length}</strong></div><div class="stat"><span>Active Rental</span><strong>${active}</strong></div><div class="stat"><span>Pending Payment</span><strong>${(payments||[]).filter(p=>p.status==='pending').length}</strong></div></div><div class="rev-chart">${days.map(x=>`<div class="rev-col"><small>${money(x.val)}</small><div class="rev-bar" style="height:${Math.max(6,Math.round(x.val/max*150))}px"></div><span>${x.label}</span></div>`).join('')}</div>`);
+  };
+
+  // ADMIN WALLET TOPUPS + BALANCE ADJUST
+  window.openAdminTopups=async function(){
+   if(!isAdmin())return openLogin();const {data,error}=await sb.from('wallet_topups').select('*').order('created_at',{ascending:false}).limit(100);if(error)return toast('Top up gagal dimuat',error.message,'error');
+   openModal(`<div class="modalHead"><h3>Wallet Top Up Queue</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="admin-list">${(data||[]).map(x=>`<div class="card cardPad"><div class="settingRow"><div><b>#${String(x.id).slice(0,8)} · ${money(x.amount)}</b><small class="muted" style="display:block">${esc(x.method||'')} · ${safeDate(x.created_at)}</small></div><span class="status ${x.status==='pending'?'s-warn':x.status==='approved'?'s-ok':'s-bad'}">${esc(x.status)}</span></div>${x.status==='pending'?`<div class="v4-bar"><button class="softBtn" onclick="viewTopupProof('${x.id}')">Bukti</button><button class="softBtn primary" onclick="verifyTopup('${x.id}','approve')">Approve</button><button class="softBtn" onclick="verifyTopup('${x.id}','reject')">Tolak</button></div>`:''}</div>`).join('')||empty('Tidak ada top up')}</div>`);
+  };
+  window.viewTopupProof=async function(id){const {data:p,error}=await sb.from('wallet_topups').select('proof_path').eq('id',id).maybeSingle();if(error||!p?.proof_path)return toast('Bukti tidak ditemukan',error?.message||'','warning');const {data,error:e}=await sb.storage.from('zackstore-files').createSignedUrl(p.proof_path,900);if(e)return toast('Preview gagal',e.message,'error');openModal(`<div class="modalHead"><h3>Bukti Top Up</h3><button class="iconBtn" onclick="closeModal()">×</button></div><a class="softBtn primary" href="${esc(data.signedUrl)}" target="_blank" rel="noopener">Buka Bukti</a>`)};
+  window.verifyTopup=async function(id,action){if(!isAdmin())return openLogin();const reason=action==='reject'?(prompt('Alasan penolakan:')||null):null;const {error}=await sb.rpc('admin_verify_wallet_topup',{p_topup_id:id,p_approve:action==='approve',p_rejection_reason:reason});if(error)return toast('Verifikasi gagal',error.message,'error');closeModal();toast(action==='approve'?'Top up disetujui':'Top up ditolak',action==='approve'?'Saldo user bertambah':'User diberi notifikasi',action==='approve'?'success':'warning');openAdminTopups()};
+  window.openAdminBalance=async function(){if(!isAdmin())return openLogin();const {data,error}=await sb.from('profiles').select('id,name,balance,role').order('created_at',{ascending:false}).limit(100);if(error)return toast('User gagal dimuat',error.message,'error');openModal(`<div class="modalHead"><h3>Adjust Wallet</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="admin-list">${(data||[]).map(u=>`<div class="item"><div class="itemMain"><b>${esc(u.name||'User')}</b><small>${money(u.balance)} · ${esc(u.role||'user')}</small></div><button class="softBtn" onclick="adjustBalance('${u.id}')">Adjust</button></div>`).join('')}</div>`) };
+  window.adjustBalance=async function(id){const amount=Number(prompt('Nominal perubahan saldo. Gunakan minus untuk mengurangi:')||0);if(!Number.isFinite(amount)||amount===0)return;const desc=prompt('Keterangan transaksi:')||'Admin adjustment';const {error}=await sb.rpc('admin_adjust_wallet',{p_user_id:id,p_amount:amount,p_description:desc});if(error)return toast('Saldo gagal diubah',error.message,'error');toast('Saldo diperbarui','Transaksi wallet berhasil dibuat','success');openAdminBalance()};
+
+  // ADD QUICK ACTIONS WITHOUT DESTROYING EXISTING UI
+  const oldRenderAll=window.renderAll;window.renderAll=function(){oldRenderAll?.();const p=document.querySelector('#profile .profileHero');if(p&&!document.getElementById('pcQuick')){const d=document.createElement('div');d.id='pcQuick';d.className='v4-bar';d.style.marginTop='10px';d.innerHTML='<button class="softBtn" onclick="openProfileCenter()">Profile Center</button><button class="softBtn" onclick="openNotificationCenter()">Notifikasi</button><button class="softBtn" onclick="openWallet()">Wallet</button><button class="softBtn" onclick="openWalletTopup()">Top Up</button>';p.appendChild(d)}const ab=document.querySelector('#admin .card.cardPad');if(ab&&!document.getElementById('zxFinalAdmin')){const d=document.createElement('div');d.id='zxFinalAdmin';d.className='v4-bar';d.style.marginTop='10px';d.innerHTML='<button class="softBtn" onclick="openRevenueDashboard()">Revenue</button><button class="softBtn" onclick="openAdminTopups()">Top Up Queue</button><button class="softBtn" onclick="openAdminBalance()">Adjust Wallet</button>';ab.appendChild(d)}};
+  setTimeout(()=>window.renderAll?.(),500);
+ }
+ wait();
+})();
+
+</script>
+<script>
+(function(){
+ const wait=()=>window.ZACKSTORE_DB?init():setTimeout(wait,250);
+ function init(){
+  const sb=window.ZACKSTORE_DB;
+  const esc=x=>typeof escapeHtml==='function'?escapeHtml(String(x??'')):String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const money=x=>typeof rupiah==='function'?rupiah(Number(x||0)):('Rp '+Number(x||0).toLocaleString('id-ID'));
+  const safeDate=x=>x?date(new Date(x).getTime()):'—';
+
+  // PROFILE CENTER
+  window.openProfileCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const [{data:p,error:pe},{data:hist,error:he}]=await Promise.all([
+    sb.from('profiles').select('id,name,role,whatsapp,avatar_url,balance,suspended,created_at,last_login_at').eq('id',state.user.id).maybeSingle(),
+    sb.from('login_history').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(10)
+   ]);
+   if(pe)return toast('Profile gagal dimuat',pe.message,'error');
+   openModal(`<div class="modalHead"><div><h3>Profile Center</h3><small class="muted">Kelola akun ZackStore</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="pc-head"><div class="pc-avatar">${p?.avatar_url?`<img src="${esc(p.avatar_url)}" alt="Avatar">`:(esc((p?.name||'U')[0]||'U'))}</div><div><b>${esc(p?.name||'User')}</b><small>${esc(p?.role||'user')} · ${p?.suspended?'Suspended':'Active'}</small></div></div>
+    <div class="field"><label>Nama</label><input id="pcName" value="${esc(p?.name||'User')}"></div>
+    <div class="field"><label>WhatsApp</label><input id="pcWa" value="${esc(p?.whatsapp||'')}" placeholder="08xxxxxxxxxx"></div>
+    <div class="field"><label>Avatar</label><input id="pcAvatar" type="file" accept="image/png,image/jpeg,image/webp"></div>
+    <div class="pc-grid"><div class="pc-stat"><small>Saldo Wallet</small><b>${money(p?.balance)}</b></div><div class="pc-stat"><small>Member sejak</small><b>${safeDate(p?.created_at)}</b></div><div class="pc-stat"><small>Login terakhir</small><b>${safeDate(p?.last_login_at)}</b></div></div>
+    <div class="modalFoot"><button class="softBtn" onclick="changePassword()">Ganti Password</button><button class="primary" onclick="saveProfileCenter()">Simpan Profile</button></div>
+    <div class="pc-history"><h4>Riwayat Login</h4>${(hist||[]).map(h=>`<div class="item"><div class="itemMain"><b>${esc(h.device||'Perangkat')}</b><small>${esc(h.ip_address||'')} · ${safeDate(h.created_at)}</small></div></div>`).join('')||empty('Belum ada riwayat login')}</div>`);
+  };
+  window.saveProfileCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const name=document.getElementById('pcName')?.value.trim()||'User', wa=document.getElementById('pcWa')?.value.trim()||null, f=document.getElementById('pcAvatar')?.files?.[0];
+   let avatar_url=null;
+   if(f){if(f.size>5*1024*1024)return toast('Avatar terlalu besar','Maksimum 5 MB','warning');const path=`${state.user.id}/avatar-${Date.now()}.${(f.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'')}`;const up=await sb.storage.from('zackstore-files').upload(path,f,{upsert:false,contentType:f.type||'image/jpeg'});if(up.error)return toast('Avatar gagal diupload',up.error.message,'error');const pub=await sb.storage.from('zackstore-files').createSignedUrl(path,60*60*24*365);if(pub.error)return toast('Avatar URL gagal dibuat',pub.error.message,'error');avatar_url=pub.data.signedUrl;}
+   const patch={name,whatsapp:wa,updated_at:new Date().toISOString()};if(avatar_url)patch.avatar_url=avatar_url;
+   const {error}=await sb.from('profiles').update(patch).eq('id',state.user.id);if(error)return toast('Profile gagal disimpan',error.message,'error');closeModal();await sync();renderAll();toast('Profile tersimpan','Data akun berhasil diperbarui','success');
+  };
+  window.changePassword=async function(){
+   const email=state.user?.email||'';if(!email)return toast('Email tidak tersedia','Akun ini belum punya email autentikasi','warning');
+   openModal(`<div class="modalHead"><h3>Ganti Password</h3><button class="iconBtn" onclick="closeModal()">×</button></div><p class="muted">Masukkan password baru untuk akun ${esc(email)}.</p><div class="field"><label>Password baru</label><input id="newPassword" type="password" minlength="8" placeholder="Minimal 8 karakter"></div><div class="field"><label>Ulangi password</label><input id="newPassword2" type="password" minlength="8"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="saveNewPassword()">Simpan</button></div>`);
+  };
+  window.saveNewPassword=async function(){const a=document.getElementById('newPassword')?.value||'',b=document.getElementById('newPassword2')?.value||'';if(a.length<8)return toast('Password terlalu pendek','Minimal 8 karakter','warning');if(a!==b)return toast('Password berbeda','Ulangi password dengan benar','warning');const {error}=await sb.auth.updateUser({password:a});if(error)return toast('Gagal mengganti password',error.message,'error');closeModal();toast('Password diperbarui','Password baru berhasil disimpan','success')};
+
+  // NOTIFICATION CENTER
+  window.openNotificationCenter=async function(){
+   if(!state.user?.id)return openLogin();
+   const {data,error}=await sb.from('notifications').select('*').eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(100);if(error)return toast('Notifikasi gagal dimuat',error.message,'error');
+   openModal(`<div class="modalHead"><div><h3>Notification Center</h3><small class="muted">Semua pemberitahuan akunmu</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="pc-actions"><button class="softBtn" onclick="markNotificationsRead();openNotificationCenter()">Tandai semua dibaca</button></div><div class="notif-list">${(data||[]).map(n=>`<div class="notif-row ${n.read?'':'unread'}"><div class="notif-dot"></div><div class="itemMain"><b>${esc(n.title||'Notifikasi')}</b><small>${esc(n.message||'')} · ${safeDate(n.created_at)}</small></div>${n.order_id?`<button class="softBtn" onclick="closeModal();orderDetail('${n.order_id}')">Buka</button>`:''}</div>`).join('')||empty('Belum ada notifikasi')}</div>`);
+  };
+
+  // TOP UP WALLET
+  window.openWalletTopup=async function(){
+   if(!state.user?.id)return openLogin();
+   const sets=v2().appSettings||[];const methods=sets.find(x=>x.key==='payment')?.value?.methods||['QRIS','Transfer Bank','E-Wallet'];
+   openModal(`<div class="modalHead"><div><h3>Top Up Wallet</h3><small class="muted">Saldo akan masuk setelah admin memverifikasi bukti pembayaran.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Nominal</label><input id="topupAmount" type="number" min="1000" step="1000" placeholder="Contoh 25000"></div><div class="field"><label>Metode</label><select id="topupMethod">${methods.map(x=>`<option>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Bukti pembayaran</label><input id="topupProof" type="file" accept="image/*,.pdf"></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="submitWalletTopup()">Kirim Top Up</button></div>`);
+  };
+  window.submitWalletTopup=async function(){
+   const amount=Math.floor(Number(document.getElementById('topupAmount')?.value||0)), method=document.getElementById('topupMethod')?.value||'QRIS', f=document.getElementById('topupProof')?.files?.[0];
+   if(amount<1000)return toast('Nominal tidak valid','Minimal top up Rp1.000','warning');if(amount>10000000)return toast('Nominal terlalu besar','Maksimum Rp10.000.000','warning');if(!f)return toast('Bukti belum dipilih','Upload bukti pembayaran','warning');if(f.size>10*1024*1024)return toast('File terlalu besar','Maksimum 10 MB','warning');
+   const path=`${state.user.id}/wallet/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const up=await sb.storage.from('zackstore-files').upload(path,f,{upsert:false,contentType:f.type||'application/octet-stream'});if(up.error)return toast('Upload gagal',up.error.message,'error');
+   const {error}=await sb.from('wallet_topups').insert({user_id:state.user.id,amount,method,proof_path:path,status:'pending'});if(error){await sb.storage.from('zackstore-files').remove([path]);return toast('Top up gagal',error.message,'error')}
+   await sb.from('notifications').insert({user_id:state.user.id,title:'Top up dikirim',message:`Top up ${money(amount)} sedang menunggu verifikasi admin.`,type:'wallet'});closeModal();toast('Top up terkirim','Menunggu verifikasi admin','success');
+  };
+
+  // RENTAL EXTENSION
+  window.openExtension=async function(orderId){
+   const o=(state.orders||[]).find(x=>x.id===orderId);if(!o)return;const b=(state.bots||[]).find(x=>String(x.name)===String(o.packageName||o.package_name));if(!b)return toast('Paket tidak ditemukan','Admin mungkin sudah mengubah paket','warning');
+   openModal(`<div class="modalHead"><div><h3>Perpanjang Rental</h3><small class="muted">${esc(o.packageName||'Bot')}</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="field"><label>Pilih durasi</label><select id="extDuration"><option value="1">1x paket — ${money(b.price)}</option><option value="2">2x paket — ${money(Number(b.price)*2)}</option><option value="3">3x paket — ${money(Number(b.price)*3)}</option></select></div><div class="modalFoot"><button onclick="closeModal()">Batal</button><button class="primary" onclick="payExtension('${orderId}')">Bayar dengan Wallet</button></div>`);
+  };
+  window.payExtension=async function(orderId){const mult=Number(document.getElementById('extDuration')?.value||1);const {data,error}=await sb.rpc('extend_rental_with_wallet',{p_order_id:orderId,p_multiplier:mult});if(error)return toast('Perpanjangan gagal',error.message,'error');closeModal();await sync();await loadWorkspace();renderWorkspace();toast('Rental diperpanjang',`Masa aktif ditambah ${mult}x paket`,'success')};
+
+  // ADMIN REVENUE DASHBOARD
+  window.openRevenueDashboard=async function(){
+   if(!isAdmin())return openLogin();
+   const [{data:orders,error:oe},{data:payments,error:pe}]=await Promise.all([sb.from('orders').select('id,package_name,final_price,price,payment_status,status,created_at'),sb.from('payments').select('amount,status,created_at')]);if(oe||pe)return toast('Dashboard gagal dimuat',(oe||pe).message,'error');
+   const paid=(orders||[]).filter(o=>o.payment_status==='paid'), revenue=paid.reduce((n,o)=>n+Number(o.final_price??o.price??0),0), active=paid.filter(o=>o.status==='active').length;
+   const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const key=d.toISOString().slice(0,10),val=paid.filter(o=>String(o.created_at).slice(0,10)===key).reduce((n,o)=>n+Number(o.final_price??o.price??0),0);days.push({key,val,label:d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})})}const max=Math.max(1,...days.map(x=>x.val));
+   openModal(`<div class="modalHead"><div><h3>Revenue Dashboard</h3><small class="muted">Performa 7 hari terakhir</small></div><button class="iconBtn" onclick="closeModal()">×</button></div><div class="v4-grid"><div class="stat"><span>Total Revenue</span><strong>${money(revenue)}</strong></div><div class="stat"><span>Paid Orders</span><strong>${paid.length}</strong></div><div class="stat"><span>Active Rental</span><strong>${active}</strong></div><div class="stat"><span>Pending Payment</span><strong>${(payments||[]).filter(p=>p.status==='pending').length}</strong></div></div><div class="rev-chart">${days.map(x=>`<div class="rev-col"><small>${money(x.val)}</small><div class="rev-bar" style="height:${Math.max(6,Math.round(x.val/max*150))}px"></div><span>${x.label}</span></div>`).join('')}</div>`);
+  };
+
+  // ADMIN WALLET TOPUPS + BALANCE ADJUST
+  window.openAdminTopups=async function(){
+   if(!isAdmin())return openLogin();const {data,error}=await sb.from('wallet_topups').select('*').order('created_at',{ascending:false}).limit(100);if(error)return toast('Top up gagal dimuat',error.message,'error');
+   openModal(`<div class="modalHead"><h3>Wallet Top Up Queue</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="admin-list">${(data||[]).map(x=>`<div class="card cardPad"><div class="settingRow"><div><b>#${String(x.id).slice(0,8)} · ${money(x.amount)}</b><small class="muted" style="display:block">${esc(x.method||'')} · ${safeDate(x.created_at)}</small></div><span class="status ${x.status==='pending'?'s-warn':x.status==='approved'?'s-ok':'s-bad'}">${esc(x.status)}</span></div>${x.status==='pending'?`<div class="v4-bar"><button class="softBtn" onclick="viewTopupProof('${x.id}')">Bukti</button><button class="softBtn primary" onclick="verifyTopup('${x.id}','approve')">Approve</button><button class="softBtn" onclick="verifyTopup('${x.id}','reject')">Tolak</button></div>`:''}</div>`).join('')||empty('Tidak ada top up')}</div>`);
+  };
+  window.viewTopupProof=async function(id){const {data:p,error}=await sb.from('wallet_topups').select('proof_path').eq('id',id).maybeSingle();if(error||!p?.proof_path)return toast('Bukti tidak ditemukan',error?.message||'','warning');const {data,error:e}=await sb.storage.from('zackstore-files').createSignedUrl(p.proof_path,900);if(e)return toast('Preview gagal',e.message,'error');openModal(`<div class="modalHead"><h3>Bukti Top Up</h3><button class="iconBtn" onclick="closeModal()">×</button></div><a class="softBtn primary" href="${esc(data.signedUrl)}" target="_blank" rel="noopener">Buka Bukti</a>`)};
+  window.verifyTopup=async function(id,action){if(!isAdmin())return openLogin();const reason=action==='reject'?(prompt('Alasan penolakan:')||null):null;const {error}=await sb.rpc('admin_verify_wallet_topup',{p_topup_id:id,p_approve:action==='approve',p_rejection_reason:reason});if(error)return toast('Verifikasi gagal',error.message,'error');closeModal();toast(action==='approve'?'Top up disetujui':'Top up ditolak',action==='approve'?'Saldo user bertambah':'User diberi notifikasi',action==='approve'?'success':'warning');openAdminTopups()};
+  window.openAdminBalance=async function(){if(!isAdmin())return openLogin();const {data,error}=await sb.from('profiles').select('id,name,balance,role').order('created_at',{ascending:false}).limit(100);if(error)return toast('User gagal dimuat',error.message,'error');openModal(`<div class="modalHead"><h3>Adjust Wallet</h3><button class="iconBtn" onclick="closeModal()">×</button></div><div class="admin-list">${(data||[]).map(u=>`<div class="item"><div class="itemMain"><b>${esc(u.name||'User')}</b><small>${money(u.balance)} · ${esc(u.role||'user')}</small></div><button class="softBtn" onclick="adjustBalance('${u.id}')">Adjust</button></div>`).join('')}</div>`) };
+  window.adjustBalance=async function(id){const amount=Number(prompt('Nominal perubahan saldo. Gunakan minus untuk mengurangi:')||0);if(!Number.isFinite(amount)||amount===0)return;const desc=prompt('Keterangan transaksi:')||'Admin adjustment';const {error}=await sb.rpc('admin_adjust_wallet',{p_user_id:id,p_amount:amount,p_description:desc});if(error)return toast('Saldo gagal diubah',error.message,'error');toast('Saldo diperbarui','Transaksi wallet berhasil dibuat','success');openAdminBalance()};
+
+  // ADMIN BOT PACKAGE CENTER
+  window.openAdminPackages=async function(){
+   if(!isAdmin())return openLogin();
+   const {data,error}=await sb.from('bot_packages').select('*').order('created_at',{ascending:false});
+   if(error)return toast('Paket gagal dimuat',error.message,'error');
+   const rows=(data||[]).map(b=>`<div class="card cardPad" style="margin:8px 0">
+    <div class="settingRow"><div><b>${esc(b.name||'Tanpa nama')}</b><small class="muted" style="display:block">${money(b.price||0)} · ${esc(b.duration||'—')}</small></div>
+    <span class="status ${b.available===false?'s-bad':'s-ok'}">${b.available===false?'Nonaktif':'Aktif'}</span></div>
+    <div class="v4-mini" style="margin-top:6px">${(Array.isArray(b.features)?b.features:[]).map(esc).join(' · ')||'Tidak ada fitur'}</div>
+    <div class="v4-bar" style="margin-top:8px">
+      <button class="softBtn" onclick="openBotForm('${b.id}')">Edit</button>
+      <button class="softBtn" onclick="toggleBotPackage('${b.id}',${b.available===false})">${b.available===false?'Aktifkan':'Nonaktifkan'}</button>
+    </div></div>`).join('');
+   openModal(`<div class="modalHead"><div><h3>Bot Package Management</h3><small class="muted">Kelola harga, durasi, fitur dan ketersediaan paket.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+   <div class="v4-bar" style="margin-bottom:10px"><button class="softBtn primary" onclick="closeModal();openBotForm()">+ Tambah Paket</button></div>
+   <div style="max-height:65vh;overflow:auto">${rows||empty('Belum ada paket bot')}</div>`);
+  };
+  window.toggleBotPackage=async function(id,nextAvailable){
+   if(!isAdmin())return openLogin();
+   const {error}=await sb.from('bot_packages').update({available:!!nextAvailable}).eq('id',id);
+   if(error)return toast('Status paket gagal diubah',error.message,'error');
+   await sync();toast(nextAvailable?'Paket diaktifkan':'Paket dinonaktifkan','Perubahan tersimpan','success');openAdminPackages();
+  };
+
+  // REFERRAL CENTER V7: use referral_claims for actual claims, legacy referrals for owned code.
+  window.openReferral=async function(){
+   if(!state.user?.id)return openLogin();
+   const [mineRes,claimsRes]=await Promise.all([
+    sb.from('referrals').select('*').eq('referrer_id',state.user.id).order('created_at',{ascending:false}),
+    sb.from('referral_claims').select('*').eq('referrer_id',state.user.id).order('created_at',{ascending:false})
+   ]);
+   if(mineRes.error)return toast('Referral gagal dimuat',mineRes.error.message,'error');
+   if(claimsRes.error && !/relation .*referral_claims/i.test(claimsRes.error.message))return toast('Referral gagal dimuat',claimsRes.error.message,'error');
+   const mine=mineRes.data||[], claims=claimsRes.data||[];
+   const total=claims.reduce((n,x)=>n+Number(x.reward_amount||0),0)+mine.reduce((n,x)=>n+Number(x.reward_amount||0),0);
+   openModal(`<div class="modalHead"><div><h3>Referral Center</h3><small class="muted">Ajak user baru dan dapatkan bonus setelah syarat terpenuhi.</small></div><button class="iconBtn" onclick="closeModal()">×</button></div>
+    <div class="zx-v6-grid"><div class="zx-v6-card"><small class="muted">Kode kamu</small><div class="zx-v6-code" style="margin-top:6px">${esc(mine?.[0]?.code||'Belum dibuat')}</div></div>
+    <div class="zx-v6-card"><small class="muted">Bonus</small><div class="zx-v6-balance" style="font-size:22px">${rupiah(total)}</div></div>
+    <div class="zx-v6-card"><small class="muted">Referral aktif</small><div class="zx-v6-balance" style="font-size:22px">${claims.filter(x=>x.status==='qualified').length}</div></div></div>
+    <div class="field" style="margin-top:12px"><label>Masukkan kode referral teman</label><div class="row" style="gap:8px"><input id="claimReferralCode" placeholder="ZACKABC123" style="flex:1"><button class="softBtn primary" onclick="claimReferral()">Gunakan</button></div><small class="muted">Kode referral hanya bisa diklaim sekali per akun.</small></div>
+    <div style="margin-top:12px"><h4>Klaim referral</h4>${claims.map(x=>`<div class="item"><div class="itemMain"><b>${esc(x.code)}</b><small>${esc(x.status)} · Bonus ${rupiah(x.reward_amount||0)}</small></div></div>`).join('')||empty('Belum ada referral yang diklaim')}</div>`);
+  };
+
+  // Add package management to admin quick actions without replacing existing buttons.
+  const _oldRenderAllPkg=window.renderAll;
+  window.renderAll=function(){
+   _oldRenderAllPkg?.();
+   const ab=document.querySelector('#admin .card.cardPad');
+   if(ab&&!document.getElementById('zxPackageAdmin')){const d=document.createElement('div');d.id='zxPackageAdmin';d.className='v4-bar';d.style.marginTop='10px';d.innerHTML='<button class="softBtn" onclick="openAdminPackages()">Bot Packages</button>';ab.appendChild(d)}
+  };
+
+  // LOGIN HISTORY + SUSPENSION CHECK
+  sb.auth.onAuthStateChange(async (_event,session)=>{
+   if(!session?.user?.id)return;
+   const {data:p}=await sb.from('profiles').select('suspended').eq('id',session.user.id).maybeSingle();
+   if(p?.suspended){toast('Akun disuspend','Hubungi admin untuk mengaktifkan kembali akun','error');await sb.auth.signOut();return}
+   await sb.from('profiles').update({last_login_at:new Date().toISOString()}).eq('id',session.user.id);
+   await sb.from('login_history').insert({user_id:session.user.id,device:navigator.userAgent.slice(0,180),ip_address:null});
+  });
+
+  // ADD QUICK ACTIONS WITHOUT DESTROYING EXISTING UI
+  const oldRenderAll=window.renderAll;window.renderAll=function(){oldRenderAll?.();const p=document.querySelector('#profile .profileHero');if(p&&!document.getElementById('pcQuick')){const d=document.createElement('div');d.id='pcQuick';d.className='v4-bar';d.style.marginTop='10px';d.innerHTML='<button class="softBtn" onclick="openProfileCenter()">Profile Center</button><button class="softBtn" onclick="openNotificationCenter()">Notifikasi</button><button class="softBtn" onclick="openWallet()">Wallet</button><button class="softBtn" onclick="openWalletTopup()">Top Up</button>';p.appendChild(d)}const ab=document.querySelector('#admin .card.cardPad');if(ab&&!document.getElementById('zxFinalAdmin')){const d=document.createElement('div');d.id='zxFinalAdmin';d.className='v4-bar';d.style.marginTop='10px';d.innerHTML='<button class="softBtn" onclick="openRevenueDashboard()">Revenue</button><button class="softBtn" onclick="openAdminTopups()">Top Up Queue</button><button class="softBtn" onclick="openAdminBalance()">Adjust Wallet</button>';ab.appendChild(d)}};
+  setTimeout(()=>window.renderAll?.(),500);
+ }
+ wait();
+})();
+
 </script>
 </body>
 </html>
