@@ -2,14 +2,12 @@ name: Build ZackStore APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,13 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Add Android platform
+      - name: Generate Android platform
         run: npx cap add android
 
       - name: Generate app icons
@@ -37,7 +29,13 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build Debug APK
         working-directory: android
         run: |
           chmod +x gradlew
