@@ -732,13 +732,9 @@ function toggleCollapse(){document.getElementById('sidebar').classList.toggle('c
   }
   if(!dbBot?.id)return toast('Paket tidak ditemukan','Refresh data paket lalu coba lagi','error');
 
-  const payload={user_id:state.user.id,bot_id:dbBot.id,package_id:dbBot.id,customer_name:name,customer_phone:wa,package_name:dbBot.name||b.name,price:Number(dbBot.price??b.price??0),voucher_code:(document.getElementById('oVoucher')?.value||'').trim().toUpperCase()||null,status:'pending',payment_status:'unpaid',group_link:groupLink,notes:document.getElementById('oNote')?.value||''};
-  let ins=await sb.from('orders').insert(payload).select().single();
-  if(ins.error && /bot_id|column/i.test(ins.error.message||'')){
-    const legacy={...payload}; delete legacy.bot_id; legacy.package_id=dbBot.id;
-    ins=await sb.from('orders').insert(legacy).select().single();
-  }
-  const {data,error}=ins;
+  const payload={user_id:state.user.id,bot_id:dbBot.id,customer_name:name,customer_phone:wa,package_name:dbBot.name||b.name,price:Number(dbBot.price??b.price??0),voucher_code:(document.getElementById('oVoucher')?.value||'').trim().toUpperCase()||null,status:'pending',payment_status:'unpaid',group_link:groupLink,notes:document.getElementById('oNote')?.value||''};
+  // orders memakai bot_id bertipe UUID sesuai schema produksi.
+  const {data,error}=await sb.from('orders').insert(payload).select().single();
   if(error)return toast('Pesanan gagal dibuat',error.message,'error');
   await sb.from('order_messages').insert({order_id:data.id,sender_id:state.user.id,sender_role:'user',message:'Pesanan dibuat. Admin dapat menghubungi kamu di chat ini.'});
   await sb.from('activities').insert({user_id:state.user.id,text:'Pesanan baru: '+data.id});
