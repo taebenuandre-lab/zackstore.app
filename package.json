@@ -6,7 +6,7 @@
   "scripts": {
     "sync": "npx cap sync android",
     "build:apk": "npx cap build android --androidreleasetype APK",
-    "generate:icons": "npx capacitor-assets generate"
+    "generate:icons": "npx capacitor-assets generate --android"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.0",
-    "@capacitor/assets": "^7.0.0",
+    "@capacitor/assets": "3.0.5",
     "typescript": "^5.9.3"
   }
 }
